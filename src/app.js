@@ -37,6 +37,7 @@ app.get('/', (req, res) => {
     project_commands[pc_key]=1;
     let run_command = 'cd ' + config.projectDir + path.sep + req.query.project;
     run_command += ' && ' + command.command;
+    process.env.QUERY_ARGS=JSON.stringify(req.query);
     let cp=ch.exec(run_command, (error, stdout, stderr) => {
         if (error instanceof Error) {
             res.status(502).send(stderr);
