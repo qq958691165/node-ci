@@ -13,4 +13,7 @@
 5. 参照src/Commands/example.js加入部署时想要执行的命令
 6. 使用npm run start进行启动
 
-Url地址示例````http://127.0.0.1:3000/?key=[ci的key]&project=[项目目录名]&command=[命令]````
+Url地址示例````[GET] http://127.0.0.1:3000/?key=[ci的key]&project=[项目目录名]&command=[命令]````
+
+##注意事项
++ ci请求参数统一json序列化放入命令进程的环境变量````CI_ARGS````中，即命令中可通过````process.env.CI_ARGS````获取
