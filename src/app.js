@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
         return;
     }
 
-    let pc_key=req.query.project+'___'+command;
+    let pc_key=req.query.project+'___'+req.query.command;
     if (project_commands[pc_key]){
         res.sendStatus(501);
         return;

@@ -7,7 +7,7 @@
 
 ## 用法
 1. 克隆此项目到要部署的机器
-2. 在项目目录中复制.env.example并命令为.env
+2. 在项目目录中复制.env.example并命名为.env
 3. 使用npm install命令进行包安装
 4. 更改.env配置文件
 5. 参照src/Commands/example.js加入部署时想要执行的命令
