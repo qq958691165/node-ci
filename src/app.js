@@ -1,6 +1,7 @@
 const ch = require('child_process');
 const os = require('os');
 const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const config = require('./config');
 
@@ -29,31 +30,43 @@ app.get('/', (req, res) => {
     }
 
     let pc_key=req.query.project+'___'+req.query.command;
-    if (project_commands[pc_key]){
+    if (project_commands[pc_key] && config.command_limit){
         res.sendStatus(501);
         return;
     }
 
     project_commands[pc_key]=1;
-    let run_command = 'cd ' + config.projectDir + path.sep + req.query.project;
-    run_command += ' && ' + command.command;
-    process.env.CI_ARGS=JSON.stringify(req.query);
-    let cp=ch.exec(run_command, (error, stdout, stderr) => {
+    let run_command = command.command;
+    let cwd=config.projectDir + path.sep + req.query.project;
+    if (!fs.existsSync(cwd)){
+        res.sendStatus(404);
+        return;
+    }
+    let cp_opt={
+        env:{
+            CI_ARGS:JSON.stringify(req.query)
+        },
+        cwd:cwd
+    };
+
+    let cp=ch.exec(run_command,cp_opt, (error, stdout, stderr) => {
         if (error instanceof Error) {
             res.status(502).send(stderr);
         } else {
             res.send(stdout);
         }
     });
-    req.socket.addListener('close',()=>{
-        if (os.platform()==="win32"){
-            ch.spawn('taskkill',['/pid',cp.pid,'-t','-f']);
-        }else{
-            ch.spawn('kill',['-9',cp.pid]);
-        }
-        delete project_commands[pc_key];
-        console.log('kill');
-    });
+    if (config.request_limit) {
+        req.socket.addListener('close', () => {
+            if (os.platform() === "win32") {
+                ch.spawn('taskkill', ['/pid', cp.pid, '-t', '-f']);
+            } else {
+                ch.spawn('kill', ['-9', cp.pid]);
+            }
+            delete project_commands[pc_key];
+            console.log('kill');
+        });
+    }
 });
 
 app.listen(config.port, () => {
