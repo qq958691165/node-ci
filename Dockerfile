@@ -1,4 +1,4 @@
-FROM nodejs
+FROM node
 MAINTAINER jack "958691165@qq.com"
 
 #时区设置
