@@ -4,24 +4,28 @@ const path = require('path');
 const fs = require('fs');
 const express = require('express');
 const config = require('./config');
+const bodyParser = require('body-parser');
 
 const app = express();
 
+app.use(bodyParser.urlencoded({ extended: true }));
+
 let project_commands={};
 
-app.get('/', (req, res) => {
-    if (config.key !== req.query.key) {
+app.post('/', (req, res) => {
+
+    if (config.key !== req.body.key) {
         res.sendStatus(403);
         return;
     }
-    if (!req.query.project || !req.query.command) {
+    if (!req.body.project || !req.body.command) {
         res.sendStatus(401);
         return;
     }
 
     let command = null;
     try {
-        command = require('./Commands/' + req.query.command);
+        command = require('./Commands/' + req.body.command);
     } catch (e) {
     }
     if (!command || !command.command) {
@@ -29,7 +33,7 @@ app.get('/', (req, res) => {
         return;
     }
 
-    let pc_key=req.query.project+'___'+req.query.command;
+    let pc_key=req.body.project+'___'+req.body.command;
     if (project_commands[pc_key] && config.command_limit){
         res.sendStatus(501);
         return;
@@ -37,14 +41,14 @@ app.get('/', (req, res) => {
 
     project_commands[pc_key]=1;
     let run_command = command.command;
-    let cwd=config.projectDir + path.sep + req.query.project;
+    let cwd=config.projectDir + path.sep + req.body.project;
     if (!fs.existsSync(cwd)){
         res.sendStatus(404);
         return;
     }
     let cp_opt={
         env:{
-            CI_ARGS:JSON.stringify(req.query)
+            CI_ARGS:JSON.stringify(req.body)
         },
         cwd:cwd
     };
@@ -52,7 +56,7 @@ app.get('/', (req, res) => {
     let cp=ch.exec(run_command,cp_opt, (error, stdout, stderr) => {
         project_commands[pc_key]=0;
         if (error instanceof Error) {
-            res.status(502).send(stderr+'\nCI_ERR');
+            res.status(502).send(stderr+'\n*****CI_ERR*****\n');
         } else {
             res.send(stdout);
         }
