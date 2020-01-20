@@ -50,8 +50,9 @@ app.get('/', (req, res) => {
     };
 
     let cp=ch.exec(run_command,cp_opt, (error, stdout, stderr) => {
+        project_commands[pc_key]=0;
         if (error instanceof Error) {
-            res.status(502).send(stderr);
+            res.status(502).send(stderr+'\nCI_ERR');
         } else {
             res.send(stdout);
         }
